@@ -26,6 +26,7 @@ var TweetFile = function(tweetFilePath) {
     }
     this.tweetFilePath_ = tweetFilePath;
     this.tweetFileDescriptor_ = fs.openSync(this.tweetFilePath_, 'r+');
+    this.writeQueue_ = [];
     // we have a file buffer and a file descriptor. We always read and write from the buffer
     // we periodically write the buffer to disk asynchronously
     this.fileBuffer_ = new Buffer(TWEET_SLOT_SIZE_BYTES * (IMAGE_HEIGHT * IMAGE_WIDTH));
@@ -47,10 +48,27 @@ TweetFile.prototype.saveTweet = function(x, y, username, tweetContent, tweetId) 
     var filePosition = this.getByteOffsetFromAddress_(addressInFile);
     // copy the buffer of this tweet into the fileBuffer_ at its proper index
     tweetBuffer.copy(this.fileBuffer_, filePosition);
-    //TODO: this is incorrect and unsafe. It should be replaced with a WriteStream
-    fs.write(this.tweetFileDescriptor_, this.fileBuffer_, 0, this.fileBuffer_.length, 0, function() {});
+    var write = fs.write.bind(this, this.tweetFileDescriptor_, this.fileBuffer_, 0, this.fileBuffer_.length, 0,
+        this.bufferWrittenToDiskCb_.bind(this));
+
+    // insert this write into the queue so it blocks other writes until this one is complete
+    this.writeQueue_.unshift(write);
+    if (this.writeQueue_.length === 1) {
+        // if there is only one write in the queue, run it. It will pop itself from the queue when complete
+        var nextWrite = this.writeQueue_[this.writeQueue_.length - 1];
+        nextWrite();
+    }
 };
 
+
+TweetFile.prototype.bufferWrittenToDiskCb_ = function() {
+    this.writeQueue_.pop(); // remove the last write that just completed
+    // and do the next write if there is one.
+    if (this.writeQueue_.length > 0) {
+        var nextWrite = this.writeQueue_[this.writeQueue_.length - 1];
+        nextWrite();
+    }
+};
 
 TweetFile.prototype.getTweet = function(x, y) {
     if (typeof x !== 'number' || typeof y !== 'number') {

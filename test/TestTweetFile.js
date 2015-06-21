@@ -18,6 +18,7 @@ var TWEET_SLOT_SIZE_BYTES = MAX_TWEET_LENGTH_BYTES + MAX_USERNAME_LENGTH_BYTES +
 // TODO: tweet id collision
 // TODO: pixel collision
 
+var startTime = Date.now();
 function createEmptyTweetFile() {
     var zeroBuffer = new Buffer(IMAGE_WIDTH * IMAGE_HEIGHT * TWEET_SLOT_SIZE_BYTES);
     zeroBuffer.fill(0);
@@ -169,4 +170,7 @@ test('write to 5 slots in file buffer, close file, read it back from reopened fi
     });
     reopenedTweetFile.close();
     fs.unlinkSync(tweetFilePath);
+
+    var elapsed = Date.now() - startTime;
+    console.log('seconds elapsed: ' + elapsed / 1000);
 });
