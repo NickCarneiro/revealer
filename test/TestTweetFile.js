@@ -55,7 +55,7 @@ test('write to beginning of file buffer, read it back from buffer', function (t)
     tweetFile.saveTweet(0, 0, expectedTweet.username, expectedTweet.content, expectedTweet.id);
     var loadedTweet = tweetFile.getTweet(0, 0);
     tweetFile.close();
-    t.deepEqual(loadedTweet, expectedTweet);
+    t.deepEqual(loadedTweet, expectedTweet, 'read tweet from buffer');
     fs.unlinkSync(tweetFilePath);
 });
 
@@ -73,8 +73,8 @@ test('write to beginning of file buffer, read from invalid location', function (
     var loadedTweet = tweetFile.getTweet(-1, -1);
     var loadedTweet2 = tweetFile.getTweet(10000000, 10000000);
     tweetFile.close();
-    t.deepEqual(loadedTweet, null);
-    t.deepEqual(loadedTweet2, null);
+    t.deepEqual(loadedTweet, null, 'tweet at negative coordinates is null');
+    t.deepEqual(loadedTweet2, null, 'tweet at coordinates outside bounds is null');
     fs.unlinkSync(tweetFilePath);
 });
 
@@ -92,7 +92,7 @@ test('write to beginning of file buffer and check size of buffer', function (t) 
     tweetFile = new TweetFile(tweetFilePath);
     var fileBufferLength = tweetFile.getFileBufferLength();
     var expectedFileBufferLength = tweetFile.getExpectedFileBufferLength();
-    t.deepEqual(fileBufferLength, expectedFileBufferLength);
+    t.deepEqual(fileBufferLength, expectedFileBufferLength, 'buffer size set correctly');
     tweetFile.close();
     fs.unlinkSync(tweetFilePath);
 });
@@ -112,7 +112,7 @@ test('write to last slot in file buffer, read it back from buffer', function (t)
     tweetFile.saveTweet(639, 479, expectedTweet.username, expectedTweet.content, expectedTweet.id);
     var loadedTweet = tweetFile.getTweet(639, 479);
     tweetFile.close();
-    t.deepEqual(loadedTweet, expectedTweet);
+    t.deepEqual(loadedTweet, expectedTweet, 'read tweet from last slot in buffer');
     fs.unlinkSync(tweetFilePath);
 });
 
@@ -134,14 +134,14 @@ test('write to first slot in file buffer, close file, read it back from reopened
 
     var reopenedTweetFile = new TweetFile(tweetFilePath);
     var loadedTweet = reopenedTweetFile.getTweet(x, y);
-    t.deepEqual(loadedTweet, expectedTweet);
+    t.deepEqual(loadedTweet, expectedTweet, 'read tweet from first slot in buffer');
     reopenedTweetFile.close();
     fs.unlinkSync(tweetFilePath);
 });
 
 
 test('write to 5 slots in file buffer, close file, read it back from reopened file', function (t) {
-    t.plan(5);
+    t.plan(7);
     var expectedTweets = [];
     expectedTweets.push([{username: 'maggie', content: 'slurp', id: 1}, {x: 639, y: 479}]);
     expectedTweets.push([{username: 'lisa', content: 'I need braces', id: 111}, {x: 0, y: 0}]);
@@ -162,11 +162,14 @@ test('write to 5 slots in file buffer, close file, read it back from reopened fi
         var coordinates = tweet[1];
         var expectedTweet = tweet[0];
         var loadedTweet = reopenedTweetFile.getTweet(coordinates.x, coordinates.y);
-        t.deepEqual(loadedTweet, expectedTweet);
+        t.deepEqual(loadedTweet, expectedTweet, 'tweet from loaded file');
     });
+    // check if bart's tweet was correctly added to the username map
+    t.equals(reopenedTweetFile.tweetExists('bart'), true, 'username exists in map');
+    // make sure a nonexistent username isn't in the username map
+    t.equals(reopenedTweetFile.tweetExists('krusty'), false, 'username does not exist in map');
     reopenedTweetFile.close();
     fs.unlinkSync(tweetFilePath);
-});
 
 
 test('attempt to save some invalid tweets', function (t) {
@@ -225,5 +228,6 @@ test('attempt to save some invalid tweets', function (t) {
 
 
 // TODO: tweet id collision
+// TODO: username collision
 // TODO: pixel collision
 // TODO: cjk characters

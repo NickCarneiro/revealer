@@ -27,10 +27,39 @@ var TweetFile = function(tweetFilePath) {
     this.tweetFilePath_ = tweetFilePath;
     this.tweetFileDescriptor_ = fs.openSync(this.tweetFilePath_, 'r+');
     this.writeQueue_ = [];
+    this.usernameMap_ = {};
     // we have a file buffer and a file descriptor. We always read and write from the buffer
     // we periodically write the buffer to disk asynchronously
     this.fileBuffer_ = new Buffer(TWEET_SLOT_SIZE_BYTES * (IMAGE_HEIGHT * IMAGE_WIDTH));
     fs.readSync(this.tweetFileDescriptor_, this.fileBuffer_, 0, this.fileBuffer_.length, 0);
+    this.initializeUsernameMap_();
+};
+
+
+/**
+ * we read the tweet buffer and build a map of usernames so we can have fast O(1) lookups
+ * of whether or not a user has already submitted a tweet
+ * @private
+ */
+TweetFile.prototype.initializeUsernameMap_ = function() {
+    for (var y = 0; y < IMAGE_HEIGHT; y++) {
+        for (var x = 0; x < IMAGE_WIDTH; x++) {
+            var tweet = this.getTweet(x, y);
+            if (tweet !== null) {
+                this.usernameMap_[tweet.username] = true;
+            }
+        }
+    }
+};
+
+
+/**
+ *
+ * @param username
+ * @returns {boolean} true if tweet exists for given username, false otherwise
+ */
+TweetFile.prototype.tweetExists = function(username) {
+    return this.usernameMap_[username] === true;
 };
 
 
@@ -54,13 +83,18 @@ TweetFile.prototype.saveTweet = function(x, y, username, tweetContent, tweetId) 
         throw new Error('Tweet content too long');
     }
     if (isNaN(tweetId) || tweetId < 0) {
-        throw new Error('Invalid tweet id')
+        throw new Error('Invalid tweet id');
+    }
+    if (this.usernameMap_[username]) {
+        throw new Error('Tweet already saved for this username');
     }
     var tweetBuffer = this.buildTweetBuffer_(username, tweetContent, tweetId);
     var addressInFile = this.getAddressFromCoordinates_(x, y);
     var filePosition = this.getByteOffsetFromAddress_(addressInFile);
-    // copy the buffer of this tweet into the fileBuffer_ at its proper index
     tweetBuffer.copy(this.fileBuffer_, filePosition);
+    // add username to in-memory map
+    this.usernameMap_[username] = true;
+    // copy the buffer of this tweet into the fileBuffer_ at its proper index
     var write = fs.write.bind(this, this.tweetFileDescriptor_, this.fileBuffer_, 0, this.fileBuffer_.length, 0,
         this.bufferWrittenToDiskCb_.bind(this));
 
