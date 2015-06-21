@@ -47,6 +47,7 @@ TweetFile.prototype.saveTweet = function(x, y, username, tweetContent, tweetId) 
     var filePosition = this.getByteOffsetFromAddress_(addressInFile);
     // copy the buffer of this tweet into the fileBuffer_ at its proper index
     tweetBuffer.copy(this.fileBuffer_, filePosition);
+    //TODO: this is incorrect and unsafe. It should be replaced with a WriteStream
     fs.write(this.tweetFileDescriptor_, this.fileBuffer_, 0, this.fileBuffer_.length, 0, function() {});
 };
 
