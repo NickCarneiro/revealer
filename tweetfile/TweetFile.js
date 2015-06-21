@@ -29,8 +29,6 @@ var TweetFile = function(tweetFilePath) {
     // we have a file buffer and a file descriptor. We always read and write from the buffer
     // we periodically write the buffer to disk asynchronously
     this.fileBuffer_ = new Buffer(TWEET_SLOT_SIZE_BYTES * (IMAGE_HEIGHT * IMAGE_WIDTH));
-    this.pendingWrites_ = 0;
-    this.closeAttempts_ = 0;
     fs.readSync(this.tweetFileDescriptor_, this.fileBuffer_, 0, this.fileBuffer_.length, 0);
 };
 
@@ -49,18 +47,14 @@ TweetFile.prototype.saveTweet = function(x, y, username, tweetContent, tweetId) 
     var filePosition = this.getByteOffsetFromAddress_(addressInFile);
     // copy the buffer of this tweet into the fileBuffer_ at its proper index
     tweetBuffer.copy(this.fileBuffer_, filePosition);
-    // write to disk asynchronously so we don't lose this tweet if program crashes
-    this.pendingWrites_++;
-    fs.write(this.tweetFileDescriptor_, this.fileBuffer_, 0, this.fileBuffer_.length, 0, this.decrementPendingWrites_);
-};
-
-
-TweetFile.prototype.decrementPendingWrites_ = function() {
-    this.pendingWrites_--;
+    fs.write(this.tweetFileDescriptor_, this.fileBuffer_, 0, this.fileBuffer_.length, 0, function() {});
 };
 
 
 TweetFile.prototype.getTweet = function(x, y) {
+    if (typeof x !== 'number' || typeof y !== 'number') {
+        return null;
+    }
     // don't go outside the buffer
     if (x < 0 || x >= IMAGE_WIDTH || y < 0 || y >= IMAGE_HEIGHT) {
         return null;
@@ -157,20 +151,12 @@ TweetFile.prototype.getByteOffsetFromAddress_ = function(address) {
 
 
 /**
- * Synchronously close file descriptor after all async writes have finished
- * TODO: find a better way to do this that doesn't involve counting pending writes and polling.
+ * Synchronously write file buffer to file and close it.
  */
 TweetFile.prototype.close = function() {
-    // wait maximum of 100ms for writes to finish.
-    if (this.pendingWrites_ === 0 || this.closeAttempts_ > 10) {
-        if (this.closeAttempts_ > 0) {
-            console.log('close attempts: ' + this.closeAttempts_);
-        }
-        fs.closeSync(this.tweetFileDescriptor_);
-    } else {
-        this.closeAttempts_++;
-        setTimeout(this.close, 10);
-    }
+    fs.writeSync(this.tweetFileDescriptor_, this.fileBuffer_, 0, this.fileBuffer_.length, 0);
+    fs.closeSync(this.tweetFileDescriptor_);
+    delete this.fileBuffer_;
 };
 
 
