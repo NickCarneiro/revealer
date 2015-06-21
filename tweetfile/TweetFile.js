@@ -43,6 +43,19 @@ var TweetFile = function(tweetFilePath) {
  * @param tweetId
  */
 TweetFile.prototype.saveTweet = function(x, y, username, tweetContent, tweetId) {
+    //validate inputs
+    if (x < 0 || x >= IMAGE_WIDTH || y < 0 || y >= IMAGE_HEIGHT) {
+        throw new Error('Invalid image coordinates');
+    }
+    if (Buffer.byteLength(username, 'utf8') > MAX_USERNAME_LENGTH_BYTES) {
+        throw new Error('Username too long');
+    }
+    if (Buffer.byteLength(tweetContent, 'utf8') > MAX_TWEET_LENGTH_BYTES) {
+        throw new Error('Tweet content too long');
+    }
+    if (isNaN(tweetId) || tweetId < 0) {
+        throw new Error('Invalid tweet id')
+    }
     var tweetBuffer = this.buildTweetBuffer_(username, tweetContent, tweetId);
     var addressInFile = this.getAddressFromCoordinates_(x, y);
     var filePosition = this.getByteOffsetFromAddress_(addressInFile);

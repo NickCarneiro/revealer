@@ -13,10 +13,6 @@ var MAX_TWEET_ID_LENGTH_BYTES = 8;
 var TWEET_SLOT_SIZE_BYTES = MAX_TWEET_LENGTH_BYTES + MAX_USERNAME_LENGTH_BYTES +
     MAX_TWEET_ID_LENGTH_BYTES;
 
-// TODO: invalid tweet id
-// TODO: invalid username length
-// TODO: tweet id collision
-// TODO: pixel collision
 
 var startTime = Date.now();
 function createEmptyTweetFile() {
@@ -170,7 +166,64 @@ test('write to 5 slots in file buffer, close file, read it back from reopened fi
     });
     reopenedTweetFile.close();
     fs.unlinkSync(tweetFilePath);
+});
 
+
+test('attempt to save some invalid tweets', function (t) {
+    t.plan(4);
+    var x = 0;
+    var y = 0;
+    createEmptyTweetFile();
+    var tweetFile = new TweetFile(tweetFilePath);
+    var expectedTweet = {
+        username: 'burthawk101',
+        content: 'hello world',
+        id: -1
+    };
+    var saveInvalidTweetId = function() {
+        tweetFile.saveTweet(x, y, expectedTweet.username, expectedTweet.content, expectedTweet.id);
+    };
+    t.throws(saveInvalidTweetId, new Error(), 'Invalid tweet id');
+
+    expectedTweet = {
+        username: 'asdfasdfasdfasdfasdfasdfasdfasdfasdfasdfasdfasdfasdfasdfasdfa',
+        content: 'hello world',
+        id: 23
+    };
+    saveInvalidTweetId = function() {
+        tweetFile.saveTweet(x, y, expectedTweet.username, expectedTweet.content, expectedTweet.id);
+    };
+    t.throws(saveInvalidTweetId, new Error(), 'Username too long');
+
+
+    expectedTweet = {
+        username: 'lisa',
+        content: 'Benjamin Franklin’s maxim about the inevitability of taxes is so familiar that it has the ring of a cliche. But it suggests a profound truth: Taxes are a certainty we dread almost as much as death. – Steve Forbes, Flat Tax Revolution, Regnery 2005 Benjamin Franklin’s maxim about the inevitability of taxes is so familiar that it has the ring of a cliche. But it suggests a profound truth: Taxes are a certainty we dread almost as much as death. – Steve Forbes, Flat Tax Revolution, Regnery 2005 Benjamin Franklin’s maxim about the inevitability of taxes is so familiar that it has the ring of a cliche. But it suggests a profound truth: Taxes are a certainty we dread almost as much as death. – Steve Forbes, Flat Tax Revolution, Regnery 2005',
+        id: 23
+    };
+    saveInvalidTweetId = function() {
+        tweetFile.saveTweet(x, y, expectedTweet.username, expectedTweet.content, expectedTweet.id);
+    };
+    t.throws(saveInvalidTweetId, new Error(), 'Tweet too long');
+
+    expectedTweet = {
+        username: 'burthawk101',
+        content: 'hello world',
+        id: 2344
+    };
+    var saveInvalidTweetPixels = function() {
+        tweetFile.saveTweet(-1, 0, expectedTweet.username, expectedTweet.content, expectedTweet.id);
+    };
+    t.throws(saveInvalidTweetPixels, new Error(), 'Invalid image coordinates');
+
+
+    tweetFile.close();
+    fs.unlinkSync(tweetFilePath);
     var elapsed = Date.now() - startTime;
     console.log('seconds elapsed: ' + elapsed / 1000);
 });
+
+
+// TODO: tweet id collision
+// TODO: pixel collision
+// TODO: cjk characters
