@@ -1,13 +1,13 @@
 # image revealer
 
-## Tweetfile Format
+## TweetFile Format
 
-for a 640x480 image = 307200 pixels
+    for a 640x480 image = 307200 pixels
          
-307200 * (560 bytes in a tweet + 60 bytes in a username + 8 bytes in tweet id)
-=
-192,921,600 bytes
-= 193 megabytes total storage required
+    307200 * (560 bytes in a tweet + 60 bytes in a username + 8 bytes in tweet id)
+    =
+    192,921,600 bytes
+    = 193 megabytes total storage required
 
 We don't need to load all the data when the page comes down because there is no way that a user will click every single tweet. We need a file that is addressable by pixel so that a user can view the associated tweet by intentionally clicking a specific pixel.
 
