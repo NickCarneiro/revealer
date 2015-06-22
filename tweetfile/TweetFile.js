@@ -273,9 +273,7 @@ TweetFile.prototype.generateStaticImage = function(secretImagePath, maskImagePat
         fileOutputStream.write(chunk);
     });
     pngStream.on('end', function() {
-        fileOutputStream.end(function() {
-            callback();
-        });
+        fileOutputStream.end(callback);
     });
 };
 
