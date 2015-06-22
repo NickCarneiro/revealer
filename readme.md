@@ -29,9 +29,9 @@ TODO: benchmark this.
 
 ## Partial Image Generator
 
-We read in the tweetfile and the jpeg image to produce a partially revealed image to send to clients. Every pixel that does not have a tweet associated with it appears blacked out. This image can be cached and updated every few minutes or whenever enough new pixels are revealed.
+We read in the tweetfile and the png image to produce a partially revealed image to send to clients. Every pixel that does not have a tweet associated with it appears blacked out. This image can be cached and updated every few minutes or whenever enough new pixels are revealed.
 
-Once the image is downloaded to the client, more pixels can be revealed in real-time and rendered on top of the client's image. Can a jpeg be converted to an HTML5 canvas? That could be a nice way to reveal pixels as they come over the wire.
+Once the image is downloaded to the client, it is written to a canvas. More pixels can be revealed in real-time as they are pushed over a websocket to the client which draws them on the existing canvas. 
 
 
 
