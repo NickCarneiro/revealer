@@ -251,7 +251,7 @@ TweetFile.prototype.generateStaticImage = function(secretImagePath, maskImagePat
     var maskImage = new Image();
     maskImage.src = maskFileDescriptor;
 
-    var canvas = new Canvas(640, 480);
+    var canvas = new Canvas(IMAGE_WIDTH, IMAGE_HEIGHT);
     var ctx = canvas.getContext('2d');
 
     ctx.drawImage(maskImage, 0, 0);
