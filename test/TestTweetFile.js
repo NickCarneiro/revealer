@@ -5,21 +5,8 @@ var test = require('tape');
 
 var tweetFilePath = path.resolve(__dirname, 'tweetfile.bin');
 
-var IMAGE_WIDTH = 640;
-var IMAGE_HEIGHT = 480;
-var MAX_TWEET_LENGTH_BYTES = 560;
-var MAX_USERNAME_LENGTH_BYTES = 60;
-var MAX_TWEET_ID_LENGTH_BYTES = 8;
-var TWEET_SLOT_SIZE_BYTES = MAX_TWEET_LENGTH_BYTES + MAX_USERNAME_LENGTH_BYTES +
-    MAX_TWEET_ID_LENGTH_BYTES;
-
-
 var startTime = Date.now();
-function createEmptyTweetFile() {
-    var zeroBuffer = new Buffer(IMAGE_WIDTH * IMAGE_HEIGHT * TWEET_SLOT_SIZE_BYTES);
-    zeroBuffer.fill(0);
-    fs.writeFileSync(tweetFilePath, zeroBuffer);
-}
+var testUtils = require('./TestUtils');
 
 test('try to load a missing tweet file', function (t) {
     t.plan(1);
@@ -44,7 +31,7 @@ test('try to load an invalid sized tweet file', function (t) {
 
 
 test('write to beginning of file buffer, read it back from buffer', function (t) {
-    createEmptyTweetFile();
+    testUtils.createEmptyTweetFile(tweetFilePath);
     t.plan(1);
     var tweetFile = new TweetFile(tweetFilePath);
     var expectedTweet = {
@@ -61,7 +48,7 @@ test('write to beginning of file buffer, read it back from buffer', function (t)
 
 
 test('write to beginning of file buffer, read from invalid location', function (t) {
-    createEmptyTweetFile();
+    testUtils.createEmptyTweetFile(tweetFilePath);
     t.plan(2);
     var tweetFile = new TweetFile(tweetFilePath);
     var tweet = {
@@ -81,7 +68,7 @@ test('write to beginning of file buffer, read from invalid location', function (
 
 test('write to beginning of file buffer and check size of buffer', function (t) {
     t.plan(1);
-    createEmptyTweetFile();
+    testUtils.createEmptyTweetFile(tweetFilePath);
     var tweetFile = new TweetFile(tweetFilePath);
     var expectedTweet = {
         username: 'burthawk101',
@@ -102,7 +89,7 @@ test('write to beginning of file buffer and check size of buffer', function (t) 
 
 test('write to last slot in file buffer, read it back from buffer', function (t) {
     t.plan(1);
-    createEmptyTweetFile();
+    testUtils.createEmptyTweetFile(tweetFilePath);
     var tweetFile = new TweetFile(tweetFilePath);
     var expectedTweet = {
         username: 'burthawk101',
@@ -122,7 +109,7 @@ test('write to first slot in file buffer, close file, read it back from reopened
     t.plan(1);
     var x = 0;
     var y = 0;
-    createEmptyTweetFile();
+    testUtils.createEmptyTweetFile(tweetFilePath);
     var tweetFile = new TweetFile(tweetFilePath);
     var expectedTweet = {
         username: 'burthawk101',
@@ -148,9 +135,9 @@ test('write to 5 slots in file buffer, close file, read it back from reopened fi
     expectedTweets.push([{username: 'bart', content: 'Eat my shorts!', id: 543534}, {x: 101, y: 100}]);
     expectedTweets.push([{username: 'marge', content: 'I don\'t know what marge says', id: 123445}, {x: 100, y: 100}]);
     expectedTweets.push([{username: 'homer', content: 'mmmm unit tests', id: 0}, {x: 1, y: 0}]);
-    createEmptyTweetFile();
+    testUtils.createEmptyTweetFile(tweetFilePath);
     var tweetFile = new TweetFile(tweetFilePath);
-    expectedTweets.forEach(function(tweet) {
+    expectedTweets.forEach(function (tweet) {
         var coordinates = tweet[1];
         tweet = tweet[0];
         tweetFile.saveTweet(coordinates.x, coordinates.y, tweet.username, tweet.content, tweet.id);
@@ -158,7 +145,7 @@ test('write to 5 slots in file buffer, close file, read it back from reopened fi
     tweetFile.close();
 
     var reopenedTweetFile = new TweetFile(tweetFilePath);
-    expectedTweets.forEach(function(tweet) {
+    expectedTweets.forEach(function (tweet) {
         var coordinates = tweet[1];
         var expectedTweet = tweet[0];
         var loadedTweet = reopenedTweetFile.getTweet(coordinates.x, coordinates.y);
@@ -170,20 +157,20 @@ test('write to 5 slots in file buffer, close file, read it back from reopened fi
     t.equals(reopenedTweetFile.tweetExists('krusty'), false, 'username does not exist in map');
     reopenedTweetFile.close();
     fs.unlinkSync(tweetFilePath);
-
+});
 
 test('attempt to save some invalid tweets', function (t) {
     t.plan(4);
     var x = 0;
     var y = 0;
-    createEmptyTweetFile();
+    testUtils.createEmptyTweetFile(tweetFilePath);
     var tweetFile = new TweetFile(tweetFilePath);
     var expectedTweet = {
         username: 'burthawk101',
         content: 'hello world',
         id: -1
     };
-    var saveInvalidTweetId = function() {
+    var saveInvalidTweetId = function () {
         tweetFile.saveTweet(x, y, expectedTweet.username, expectedTweet.content, expectedTweet.id);
     };
     t.throws(saveInvalidTweetId, new Error(), 'Invalid tweet id');
@@ -193,7 +180,7 @@ test('attempt to save some invalid tweets', function (t) {
         content: 'hello world',
         id: 23
     };
-    saveInvalidTweetId = function() {
+    saveInvalidTweetId = function () {
         tweetFile.saveTweet(x, y, expectedTweet.username, expectedTweet.content, expectedTweet.id);
     };
     t.throws(saveInvalidTweetId, new Error(), 'Username too long');
@@ -204,7 +191,7 @@ test('attempt to save some invalid tweets', function (t) {
         content: 'Benjamin Franklin’s maxim about the inevitability of taxes is so familiar that it has the ring of a cliche. But it suggests a profound truth: Taxes are a certainty we dread almost as much as death. – Steve Forbes, Flat Tax Revolution, Regnery 2005 Benjamin Franklin’s maxim about the inevitability of taxes is so familiar that it has the ring of a cliche. But it suggests a profound truth: Taxes are a certainty we dread almost as much as death. – Steve Forbes, Flat Tax Revolution, Regnery 2005 Benjamin Franklin’s maxim about the inevitability of taxes is so familiar that it has the ring of a cliche. But it suggests a profound truth: Taxes are a certainty we dread almost as much as death. – Steve Forbes, Flat Tax Revolution, Regnery 2005',
         id: 23
     };
-    saveInvalidTweetId = function() {
+    saveInvalidTweetId = function () {
         tweetFile.saveTweet(x, y, expectedTweet.username, expectedTweet.content, expectedTweet.id);
     };
     t.throws(saveInvalidTweetId, new Error(), 'Tweet too long');
@@ -214,12 +201,10 @@ test('attempt to save some invalid tweets', function (t) {
         content: 'hello world',
         id: 2344
     };
-    var saveInvalidTweetPixels = function() {
+    var saveInvalidTweetPixels = function () {
         tweetFile.saveTweet(-1, 0, expectedTweet.username, expectedTweet.content, expectedTweet.id);
     };
     t.throws(saveInvalidTweetPixels, new Error(), 'Invalid image coordinates');
-
-
     tweetFile.close();
     fs.unlinkSync(tweetFilePath);
     var elapsed = Date.now() - startTime;

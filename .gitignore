@@ -20,3 +20,4 @@ node_modules
 tweetfile.bin
 
 .DS_Store
+output.png

@@ -1,1 +1,2 @@
 require('./TestTweetFile');
+require('./TestImageWriting');

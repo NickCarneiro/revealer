@@ -1,5 +1,8 @@
 // see readme.md for a loose file format spec
 var fs = require('fs');
+var path = require('path');
+var Canvas = require('canvas');
+var Image = Canvas.Image;
 
 var IMAGE_WIDTH = 640;
 var IMAGE_HEIGHT = 480;
@@ -233,6 +236,47 @@ TweetFile.prototype.getFileBufferLength = function() {
 
 TweetFile.prototype.getExpectedFileBufferLength = function() {
     return TWEET_SLOT_SIZE_BYTES * IMAGE_HEIGHT * IMAGE_WIDTH;
+};
+
+/**
+ * reads in secret image, mask image, and writes the partially revealed image to disk
+ * @param secretImagePath
+ * @param maskImagePath
+ * @param destinationImagePath
+ * @param callback
+ */
+TweetFile.prototype.generateStaticImage = function(secretImagePath, maskImagePath, destinationImagePath,
+                                                   callback) {
+    var maskFileDescriptor = fs.readFileSync(maskImagePath);
+    var maskImage = new Image();
+    maskImage.src = maskFileDescriptor;
+
+    var canvas = new Canvas(640, 480);
+    var ctx = canvas.getContext('2d');
+
+    ctx.drawImage(maskImage, 0, 0);
+    for (var y = 0; y < IMAGE_HEIGHT; y++) {
+        for (var x = 0; x < IMAGE_WIDTH; x++) {
+            var tweet = this.getTweet(x, y);
+            if (tweet !== null) {
+                ctx.fillStyle = 'rgb(100, 100, 255)';
+                //TODO: get color for this x, y pair from the hidden image and set it
+                ctx.fillRect(x, y, 1, 1);
+            }
+        }
+    }
+
+    var fileOutputStream = fs.createWriteStream(destinationImagePath, {flags: 'w'});
+    var pngStream = canvas.createPNGStream();
+
+    pngStream.on('data', function(chunk){
+        fileOutputStream.write(chunk);
+    });
+    pngStream.on('end', function() {
+        fileOutputStream.end(function() {
+            callback();
+        });
+    });
 };
 
 
