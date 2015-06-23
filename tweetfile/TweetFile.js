@@ -73,8 +73,9 @@ TweetFile.prototype.tweetExists = function(username) {
  * @param username
  * @param tweetContent
  * @param tweetId
+ * @param memoryOnly {boolean} don't save to disk. Used during testing when we call this 100k times in a loop
  */
-TweetFile.prototype.saveTweet = function(x, y, username, tweetContent, tweetId) {
+TweetFile.prototype.saveTweet = function(x, y, username, tweetContent, tweetId, memoryOnly) {
     //validate inputs
     if (x < 0 || x >= IMAGE_WIDTH || y < 0 || y >= IMAGE_HEIGHT) {
         throw new Error('Invalid image coordinates');
@@ -97,6 +98,9 @@ TweetFile.prototype.saveTweet = function(x, y, username, tweetContent, tweetId) 
     tweetBuffer.copy(this.fileBuffer_, filePosition);
     // add username to in-memory map
     this.usernameMap_[username] = true;
+    if (memoryOnly) {
+        return;
+    }
     // copy the buffer of this tweet into the fileBuffer_ at its proper index
     var write = fs.write.bind(this, this.tweetFileDescriptor_, this.fileBuffer_, 0, this.fileBuffer_.length, 0,
         this.bufferWrittenToDiskCb_.bind(this));
@@ -250,18 +254,26 @@ TweetFile.prototype.generateStaticImage = function(secretImagePath, maskImagePat
     var maskFileDescriptor = fs.readFileSync(maskImagePath);
     var maskImage = new Image();
     maskImage.src = maskFileDescriptor;
-
     var canvas = new Canvas(IMAGE_WIDTH, IMAGE_HEIGHT);
-    var ctx = canvas.getContext('2d');
+    var maskImageCanvasContext = canvas.getContext('2d');
+    maskImageCanvasContext.drawImage(maskImage, 0, 0);
 
-    ctx.drawImage(maskImage, 0, 0);
+    var secretImageFileDescriptor = fs.readFileSync(secretImagePath);
+    var secretImage = new Image();
+    secretImage.src = secretImageFileDescriptor;
+    var secretImageCanvas = new Canvas(IMAGE_WIDTH, IMAGE_HEIGHT);
+    var secretImageCanvasContext = secretImageCanvas.getContext('2d');
+    secretImageCanvasContext.drawImage(secretImage, 0, 0);
+
     for (var y = 0; y < IMAGE_HEIGHT; y++) {
         for (var x = 0; x < IMAGE_WIDTH; x++) {
             var tweet = this.getTweet(x, y);
             if (tweet !== null) {
-                ctx.fillStyle = 'rgb(100, 100, 255)';
+
+                var pixelData = secretImageCanvasContext.getImageData(x, y, 1, 1).data;
+                maskImageCanvasContext.fillStyle = this.pixelDataToRgbString(pixelData);
                 //TODO: get color for this x, y pair from the hidden image and set it
-                ctx.fillRect(x, y, 1, 1);
+                maskImageCanvasContext.fillRect(x, y, 1, 1);
             }
         }
     }
@@ -275,6 +287,11 @@ TweetFile.prototype.generateStaticImage = function(secretImagePath, maskImagePat
     pngStream.on('end', function() {
         fileOutputStream.end(callback);
     });
+};
+
+
+TweetFile.prototype.pixelDataToRgbString = function(pixelData) {
+    return 'rgb(' + pixelData[0] + ', ' + pixelData[1] + ', ' + pixelData[3] + ')';
 };
 
 

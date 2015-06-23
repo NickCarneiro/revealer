@@ -11,7 +11,7 @@
 
 We don't need to load all the data when the page comes down because there is no way that a user will click every single tweet. We need a file that is addressable by pixel so that a user can view the associated tweet by intentionally clicking a specific pixel.
 
-File format: 
+File format:                             
 
 Each 628 byte chunk contains
 
