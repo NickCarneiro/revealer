@@ -3,11 +3,12 @@ var path = require('path');
 var favicon = require('serve-favicon');
 var logger = require('morgan');
 var cookieParser = require('cookie-parser');
+var fs = require('fs');
+
 var bodyParser = require('body-parser');
-
 var routes = require('./routes/index');
-var users = require('./routes/users');
 
+var users = require('./routes/users');
 var app = express();
 
 // view engine setup
@@ -57,5 +58,15 @@ app.use(function(err, req, res, next) {
   });
 });
 
+// attempt to copy output.png to public/images every minute
+var syncPartiallyRevealedImage = function() {
+  var outputFileSourcePath = path.join(__dirname, 'images', 'output.png');
+  if (fs.existsSync(outputFileSourcePath)) {
+    var outputFileDestinationPath = path.join(__dirname, 'public', 'images', 'output.png');
+    fs.createReadStream(outputFileSourcePath).pipe(fs.createWriteStream(outputFileDestinationPath));
+  }
+};
 
+syncPartiallyRevealedImage();
+setInterval(syncPartiallyRevealedImage, 60000);
 module.exports = app;
