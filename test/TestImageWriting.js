@@ -27,7 +27,7 @@ test('write a png from the image map with one pixel revealed', function (t) {
         function() {
             var resultFileBuffer = fs.readFileSync(destinationImagePath);
             var hash = md5(resultFileBuffer);
-            var expectedHash = 'de948b3e75af874fa2c9e4021bc2cc4e';
+            var expectedHash = '1f401cfdf414185dc3a16cf4dbf17c9b';
             t.equal(hash, expectedHash, 'md5 hash of output image');
             tweetFile.close();
             fs.unlinkSync(tweetFilePath);
@@ -62,7 +62,7 @@ test('write a png from the image map with 25% of the pixels revealed', function 
         function() {
             var resultFileBuffer = fs.readFileSync(destinationImagePath);
             var hash = md5(resultFileBuffer);
-            var expectedHash = '8625aded64eabc9963939c6f7d9164e9';
+            var expectedHash = '25e530d4b79f9e782cb3662be8713c9a';
             t.equal(hash, expectedHash, 'md5 hash of output image');
             tweetFile.close();
             fs.unlinkSync(tweetFilePath);
