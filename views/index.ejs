@@ -5,8 +5,12 @@
     <link rel='stylesheet' href='/stylesheets/style.css' />
   </head>
   <body>
-    <h1><%= title %></h1>
-    <p>Welcome to <%= title %></p>
-    <img src="/images/output.png">
+    <h1 id="selected-pixel">Mouse over the image...</h1>
+    <div class="image-container">
+      <img id="hidden-image" src="/images/output.png">
+      <canvas style="display: none;" id="hidden-image-canvas" width="640" height="480">
+      </canvas>
+    </div>
+  <script src="/javascripts/main.js"></script>
   </body>
 </html>
