@@ -291,7 +291,7 @@ TweetFile.prototype.generateStaticImage = function(secretImagePath, maskImagePat
 
 
 TweetFile.prototype.pixelDataToRgbString = function(pixelData) {
-    return 'rgb(' + pixelData[0] + ', ' + pixelData[1] + ', ' + pixelData[3] + ')';
+    return 'rgb(' + pixelData[0] + ', ' + pixelData[1] + ', ' + pixelData[2] + ')';
 };
 
 
