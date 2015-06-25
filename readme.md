@@ -34,6 +34,30 @@ We read in the tweetfile and the png image to produce a partially revealed image
 Once the image is downloaded to the client, it is written to a canvas. More pixels can be revealed in real-time as they are pushed over a websocket to the client which draws them on the existing canvas. 
 
 
+## XHR communication
+
+Clicking a pixel sends a request to /status?x=1&y=3. 
+The json response looks like
+
+    [{
+        x: 1,
+        y: 3,
+        available: true
+    }]
+
+or
+
+    [{
+        x: 1,
+        y: 3,
+        available: false
+        user: "burthawk101",
+        "tweetId": 1234,
+        "tweetContent": "what is going on?"
+    }]
+
+
+
 
 
 
