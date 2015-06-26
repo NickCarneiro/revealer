@@ -28,6 +28,15 @@ partialImageCanvas.addEventListener('mousemove', function(e) {
 
 });
 
+partialImageCanvas.addEventListener('click', function(e) {
+    var pos = findPos(this);
+    var x = e.pageX - pos.x;
+    var y = e.pageY - pos.y;
+    getPixelInformation(x, y);
+    console.log('clicked ', x, y)
+
+});
+
 partialImageCanvas.addEventListener('mouseout', function(e) {
     selectedPixelText.innerHTML = 'Mouse over the image...';
 
@@ -48,4 +57,27 @@ function findPos(obj) {
 
 var pixelDataToRgbString = function(pixelData) {
     return 'rgba(' + pixelData[0] + ', ' + pixelData[1] + ', ' + pixelData[2] + ')';
+};
+
+
+var getPixelInformation = function(x, y) {
+    var request = new XMLHttpRequest();
+    request.open('GET', '/pixel?x=' + x + '&y=' + y, true);
+
+    request.onload = function() {
+        if (request.status >= 200 && request.status < 400) {
+            // Success!
+            var resp = request.responseText;
+            console.log(resp);
+        } else {
+            // We reached our target server, but it returned an error
+
+        }
+    };
+
+    request.onerror = function() {
+        // There was a connection error of some sort
+    };
+
+    request.send();
 };

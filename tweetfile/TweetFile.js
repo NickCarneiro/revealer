@@ -1,22 +1,15 @@
 // see readme.md for a loose file format spec
 var fs = require('fs');
-var path = require('path');
 var Canvas = require('canvas');
 var Image = Canvas.Image;
 
-var IMAGE_WIDTH = 640;
-var IMAGE_HEIGHT = 480;
-var MAX_TWEET_LENGTH_BYTES = 560;
-var MAX_USERNAME_LENGTH_BYTES = 60;
-var MAX_TWEET_ID_LENGTH_BYTES = 8;
-var TWEET_SLOT_SIZE_BYTES = MAX_TWEET_LENGTH_BYTES + MAX_USERNAME_LENGTH_BYTES +
-    MAX_TWEET_ID_LENGTH_BYTES;
-
+var tweetFileUtils = require('./TweetFileUtils');
 
 var TweetFile = function(tweetFilePath) {
     if (!fs.existsSync(tweetFilePath)) {
         //console.error('Tweet file does not exist at: ', tweetFilePath);
-        throw new Error('Tweet file does not exist');
+        throw new Error('Tweet file does not exist. Set CREATE_TWEET_FILE ' +
+            'environment variable to make a new one.');
         return;
     }
     // check if file is a valid number of bytes
@@ -33,7 +26,8 @@ var TweetFile = function(tweetFilePath) {
     this.usernameMap_ = {};
     // we have a file buffer and a file descriptor. We always read and write from the buffer
     // we periodically write the buffer to disk asynchronously
-    this.fileBuffer_ = new Buffer(TWEET_SLOT_SIZE_BYTES * (IMAGE_HEIGHT * IMAGE_WIDTH));
+    this.fileBuffer_ = new Buffer(tweetFileUtils.TWEET_SLOT_SIZE_BYTES *
+        (tweetFileUtils.IMAGE_HEIGHT * tweetFileUtils.IMAGE_WIDTH));
     fs.readSync(this.tweetFileDescriptor_, this.fileBuffer_, 0, this.fileBuffer_.length, 0);
     this.initializeUsernameMap_();
 };
@@ -45,8 +39,8 @@ var TweetFile = function(tweetFilePath) {
  * @private
  */
 TweetFile.prototype.initializeUsernameMap_ = function() {
-    for (var y = 0; y < IMAGE_HEIGHT; y++) {
-        for (var x = 0; x < IMAGE_WIDTH; x++) {
+    for (var y = 0; y < tweetFileUtils.IMAGE_HEIGHT; y++) {
+        for (var x = 0; x < tweetFileUtils.IMAGE_WIDTH; x++) {
             var tweet = this.getTweet(x, y);
             if (tweet !== null) {
                 this.usernameMap_[tweet.username] = true;
@@ -77,13 +71,13 @@ TweetFile.prototype.tweetExists = function(username) {
  */
 TweetFile.prototype.saveTweet = function(x, y, username, tweetContent, tweetId, memoryOnly) {
     //validate inputs
-    if (x < 0 || x >= IMAGE_WIDTH || y < 0 || y >= IMAGE_HEIGHT) {
+    if (x < 0 || x >= tweetFileUtils.IMAGE_WIDTH || y < 0 || y >= tweetFileUtils.IMAGE_HEIGHT) {
         throw new Error('Invalid image coordinates');
     }
-    if (Buffer.byteLength(username, 'utf8') > MAX_USERNAME_LENGTH_BYTES) {
+    if (Buffer.byteLength(username, 'utf8') > tweetFileUtils.MAX_USERNAME_LENGTH_BYTES) {
         throw new Error('Username too long');
     }
-    if (Buffer.byteLength(tweetContent, 'utf8') > MAX_TWEET_LENGTH_BYTES) {
+    if (Buffer.byteLength(tweetContent, 'utf8') > tweetFileUtils.MAX_TWEET_LENGTH_BYTES) {
         throw new Error('Tweet content too long');
     }
     if (isNaN(tweetId) || tweetId < 0) {
@@ -129,13 +123,13 @@ TweetFile.prototype.getTweet = function(x, y) {
         return null;
     }
     // don't go outside the buffer
-    if (x < 0 || x >= IMAGE_WIDTH || y < 0 || y >= IMAGE_HEIGHT) {
+    if (x < 0 || x >= tweetFileUtils.IMAGE_WIDTH || y < 0 || y >= tweetFileUtils.IMAGE_HEIGHT) {
         return null;
     }
     var addressInFile = this.getAddressFromCoordinates_(x, y);
     var filePosition = this.getByteOffsetFromAddress_(addressInFile);
-    var tweetBuffer = new Buffer(TWEET_SLOT_SIZE_BYTES);
-    this.fileBuffer_.copy(tweetBuffer, 0, filePosition, filePosition + TWEET_SLOT_SIZE_BYTES);
+    var tweetBuffer = new Buffer(tweetFileUtils.TWEET_SLOT_SIZE_BYTES);
+    this.fileBuffer_.copy(tweetBuffer, 0, filePosition, filePosition + tweetFileUtils.TWEET_SLOT_SIZE_BYTES);
     var tweet = this.unpackTweetBuffer_(tweetBuffer);
     return tweet;
 };
@@ -145,13 +139,14 @@ TweetFile.prototype.buildTweetBuffer_ = function(username, tweetContent, tweetId
     //* 560 bytes of UTF-8 text for a tweet, padded with zeroes
     //* 60 bytes of UTF-8 text for a username
     //* 8 byte unsigned integer for a tweet id
-    var buffer = new Buffer(TWEET_SLOT_SIZE_BYTES);
+    var buffer = new Buffer(tweetFileUtils.TWEET_SLOT_SIZE_BYTES);
     // zero it out to overwrite random bytes in that memory location
     buffer.fill(0);
 
     buffer.write(tweetContent);
-    buffer.write(username, MAX_TWEET_LENGTH_BYTES);
-    buffer.writeDoubleLE(tweetId, MAX_TWEET_LENGTH_BYTES + MAX_USERNAME_LENGTH_BYTES);
+    buffer.write(username, tweetFileUtils.MAX_TWEET_LENGTH_BYTES);
+    buffer.writeDoubleLE(tweetId,
+        tweetFileUtils.MAX_TWEET_LENGTH_BYTES + tweetFileUtils.MAX_USERNAME_LENGTH_BYTES);
     return buffer;
 };
 
@@ -168,10 +163,11 @@ TweetFile.prototype.unpackTweetBuffer_ = function(tweetBuffer) {
     //* 60 bytes of UTF-8 text for a username
     //* 8 byte unsigned integer for a tweet id
     var tweet = {};
-    tweet.content =  tweetBuffer.toString('utf-8', 0, MAX_TWEET_LENGTH_BYTES);
-    tweet.username = tweetBuffer.toString('utf-8', MAX_TWEET_LENGTH_BYTES,
-        MAX_TWEET_LENGTH_BYTES + MAX_USERNAME_LENGTH_BYTES);
-    tweet.id = tweetBuffer.readDoubleLE(MAX_TWEET_LENGTH_BYTES + MAX_USERNAME_LENGTH_BYTES);
+    tweet.content =  tweetBuffer.toString('utf-8', 0, tweetFileUtils.MAX_TWEET_LENGTH_BYTES);
+    tweet.username = tweetBuffer.toString('utf-8', tweetFileUtils.MAX_TWEET_LENGTH_BYTES,
+        tweetFileUtils.MAX_TWEET_LENGTH_BYTES + tweetFileUtils.MAX_USERNAME_LENGTH_BYTES);
+    tweet.id = tweetBuffer.readDoubleLE(
+        tweetFileUtils.MAX_TWEET_LENGTH_BYTES +tweetFileUtils. MAX_USERNAME_LENGTH_BYTES);
 
     // The problem is that tweetContent and username are padded with zeroes after the content.
     // I'm not sure how to do this in one step because utf-8 characters are a variable number of bytes.
@@ -209,7 +205,7 @@ TweetFile.prototype.stripTrailingNullCharacters_ = function(nullPaddedString) {
  * @returns {*}
  */
 TweetFile.prototype.getAddressFromCoordinates_ = function(x, y) {
-    return IMAGE_WIDTH * y + x;
+    return tweetFileUtils.IMAGE_WIDTH * y + x;
 };
 
 
@@ -219,7 +215,7 @@ TweetFile.prototype.getAddressFromCoordinates_ = function(x, y) {
  * @returns {number}
  */
 TweetFile.prototype.getByteOffsetFromAddress_ = function(address) {
-    return TWEET_SLOT_SIZE_BYTES * address;
+    return tweetFileUtils.TWEET_SLOT_SIZE_BYTES * address;
 };
 
 
@@ -239,7 +235,7 @@ TweetFile.prototype.getFileBufferLength = function() {
 
 
 TweetFile.prototype.getExpectedFileBufferLength = function() {
-    return TWEET_SLOT_SIZE_BYTES * IMAGE_HEIGHT * IMAGE_WIDTH;
+    return tweetFileUtils.TWEET_SLOT_SIZE_BYTES * tweetFileUtils.IMAGE_HEIGHT * tweetFileUtils.IMAGE_WIDTH;
 };
 
 /**
@@ -254,14 +250,14 @@ TweetFile.prototype.generateStaticImage = function(secretImagePath, maskImagePat
     var maskFileDescriptor = fs.readFileSync(maskImagePath);
     var maskImage = new Image();
     maskImage.src = maskFileDescriptor;
-    var canvas = new Canvas(IMAGE_WIDTH, IMAGE_HEIGHT);
+    var canvas = new Canvas(tweetFileUtils.IMAGE_WIDTH, tweetFileUtils.IMAGE_HEIGHT);
     var maskImageCanvasContext = canvas.getContext('2d');
     maskImageCanvasContext.drawImage(maskImage, 0, 0);
 
     var secretImageFileDescriptor = fs.readFileSync(secretImagePath);
     var secretImage = new Image();
     secretImage.src = secretImageFileDescriptor;
-    var secretImageCanvas = new Canvas(IMAGE_WIDTH, IMAGE_HEIGHT);
+    var secretImageCanvas = new Canvas(tweetFileUtils.IMAGE_WIDTH, tweetFileUtils.IMAGE_HEIGHT);
     var secretImageCanvasContext = secretImageCanvas.getContext('2d');
     secretImageCanvasContext.drawImage(secretImage, 0, 0);
 
@@ -293,6 +289,5 @@ TweetFile.prototype.generateStaticImage = function(secretImagePath, maskImagePat
 TweetFile.prototype.pixelDataToRgbString = function(pixelData) {
     return 'rgb(' + pixelData[0] + ', ' + pixelData[1] + ', ' + pixelData[2] + ')';
 };
-
 
 module.exports = TweetFile;

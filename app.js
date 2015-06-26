@@ -4,11 +4,14 @@ var favicon = require('serve-favicon');
 var logger = require('morgan');
 var cookieParser = require('cookie-parser');
 var fs = require('fs');
+var TweetFile = require('./tweetfile/TweetFile');
 
 var bodyParser = require('body-parser');
 var routes = require('./routes/index');
 
 var users = require('./routes/users');
+var pixel = require('./routes/pixel');
+var tweetFileUtils = require('./tweetfile/TweetFileUtils');
 var app = express();
 
 // view engine setup
@@ -26,6 +29,7 @@ app.use(express.static(path.join(__dirname, 'public')));
 
 app.use('/', routes);
 app.use('/users', users);
+app.use('/pixel', pixel);
 
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {
@@ -34,6 +38,15 @@ app.use(function(req, res, next) {
   next(err);
 });
 
+var tweetFilePath = path.resolve(__dirname, 'tweetfile.bin');
+if (!fs.existsSync(tweetFilePath) && process.env.CREATE_TWEET_FILE) {
+  tweetFileUtils.createTweetFile(tweetFilePath);
+} else {
+  console.log('Saw existing tweetfile.');
+}
+
+var tweetFile = new TweetFile(tweetFilePath);
+app.set('tweetFile', tweetFile);
 // error handlers
 
 // development error handler
