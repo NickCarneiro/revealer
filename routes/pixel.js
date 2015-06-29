@@ -4,8 +4,8 @@ var router = express.Router();
 /* GET users listing. */
 router.get('/', function(req, res, next) {
     var tweetFile = req.app.get('tweetFile');
-    var x = parseInt(req.params['x']);
-    var y = parseInt(req.param['y']);
+    var x = parseInt(req.query.x);
+    var y = parseInt(req.query.y);
     var tweetObject = tweetFile.getTweet(x, y);
     var responseObject = {
         x: x,
