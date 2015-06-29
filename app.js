@@ -73,11 +73,19 @@ app.use(function(err, req, res, next) {
 
 // attempt to copy output.png to public/images every minute
 var syncPartiallyRevealedImage = function() {
-  var outputFileSourcePath = path.join(__dirname, 'images', 'output.png');
-  if (fs.existsSync(outputFileSourcePath)) {
-    var outputFileDestinationPath = path.join(__dirname, 'public', 'images', 'output.png');
-    fs.createReadStream(outputFileSourcePath).pipe(fs.createWriteStream(outputFileDestinationPath));
-  }
+  var secretImagePath = path.join(__dirname, 'images', 'pizzakid.png');
+  var maskImagePath = path.join(__dirname, 'images', 'mask.png');
+  var destinationImagePath = path.join(__dirname, 'images', 'output.png');
+
+  tweetFile.generateStaticImage(secretImagePath, maskImagePath, destinationImagePath,
+      function() {
+        console.log('finished generating static png from tweetfile buffer');
+
+        // copy the new image to the public web dir so it will be served on page load
+        var outputFileDestinationPath = path.join(__dirname, 'public', 'images', 'output.png');
+        fs.createReadStream(destinationImagePath).pipe(fs.createWriteStream(outputFileDestinationPath));
+      }
+  );
 };
 
 syncPartiallyRevealedImage();

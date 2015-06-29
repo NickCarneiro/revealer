@@ -3,7 +3,7 @@ var path = require('path');
 var fs = require('fs');
 var test = require('tape');
 
-var tweetFilePath = path.resolve(__dirname, 'tweetfile.bin');
+var tweetFilePath = path.resolve(__dirname, 'test_tweetfile.bin');
 
 var startTime = Date.now();
 var testUtils = require('./TestUtils');
@@ -76,7 +76,6 @@ test('write to beginning of file buffer and check size of buffer', function (t) 
         id: 12345
     };
     tweetFile.saveTweet(0, 0, expectedTweet.username, expectedTweet.content, expectedTweet.id);
-    tweetFile = new TweetFile(tweetFilePath);
     var fileBufferLength = tweetFile.getFileBufferLength();
     var expectedFileBufferLength = tweetFile.getExpectedFileBufferLength();
     t.deepEqual(fileBufferLength, expectedFileBufferLength, 'buffer size set correctly');

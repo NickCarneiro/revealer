@@ -261,8 +261,8 @@ TweetFile.prototype.generateStaticImage = function(secretImagePath, maskImagePat
     var secretImageCanvasContext = secretImageCanvas.getContext('2d');
     secretImageCanvasContext.drawImage(secretImage, 0, 0);
 
-    for (var y = 0; y < IMAGE_HEIGHT; y++) {
-        for (var x = 0; x < IMAGE_WIDTH; x++) {
+    for (var y = 0; y < tweetFileUtils.IMAGE_HEIGHT; y++) {
+        for (var x = 0; x < tweetFileUtils.IMAGE_WIDTH; x++) {
             var tweet = this.getTweet(x, y);
             if (tweet !== null) {
 
