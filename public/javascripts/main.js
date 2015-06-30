@@ -67,8 +67,12 @@ var getPixelInformation = function(x, y) {
     request.onload = function() {
         if (request.status >= 200 && request.status < 400) {
             // Success!
-            var resp = request.responseText;
-            console.log(resp);
+            var response = JSON.parse(request.responseText);
+            if (response.available) {
+                revealPixel(x, y);
+            } else {
+                console.log('already taken by ' + response.tweetData.username);
+            }
         } else {
             // We reached our target server, but it returned an error
 
@@ -80,4 +84,30 @@ var getPixelInformation = function(x, y) {
     };
 
     request.send();
+};
+
+
+var revealPixel = function(x, y) {
+    var tweetData = {
+        x: x,
+        y: y,
+        username: 'nick ' + Date.now(),
+        tweetContent: 'hello world!',
+        tweetId: Date.now()
+    };
+    var payload = JSON.stringify(tweetData);
+    var request = new XMLHttpRequest();
+    request.open('POST', '/pixel', true);
+    request.setRequestHeader('Content-Type', 'application/json; charset=UTF-8');
+    request.onload = function() {
+        if (request.status >= 200 && request.status < 400) {
+            // Success!
+            var resp = request.responseText;
+            console.log(resp);
+        } else {
+            // We reached our target server, but it returned an error
+
+        }
+    };
+    request.send(payload);
 };
