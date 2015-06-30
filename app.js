@@ -13,6 +13,10 @@ var users = require('./routes/users');
 var pixel = require('./routes/pixel');
 var tweetFileUtils = require('./tweetfile/TweetFileUtils');
 var app = express();
+var server = app.listen(3000);
+var io = require('socket.io').listen(server);
+
+
 
 // view engine setup
 app.set('views', path.join(__dirname, 'views'));
@@ -47,29 +51,6 @@ if (!fs.existsSync(tweetFilePath) && process.env.CREATE_TWEET_FILE) {
 
 var tweetFile = new TweetFile(tweetFilePath);
 app.set('tweetFile', tweetFile);
-// error handlers
-
-// development error handler
-// will print stacktrace
-if (app.get('env') === 'development') {
-  app.use(function(err, req, res, next) {
-    res.status(err.status || 500);
-    res.render('error', {
-      message: err.message,
-      error: err
-    });
-  });
-}
-
-// production error handler
-// no stacktraces leaked to user
-app.use(function(err, req, res, next) {
-  res.status(err.status || 500);
-  res.render('error', {
-    message: err.message,
-    error: {}
-  });
-});
 
 // attempt to copy output.png to public/images every minute
 var syncPartiallyRevealedImage = function() {
@@ -90,4 +71,9 @@ var syncPartiallyRevealedImage = function() {
 
 syncPartiallyRevealedImage();
 setInterval(syncPartiallyRevealedImage, 60000);
+
+io.on('connection', function (socket) {
+  app.set('socket', socket);
+});
+
 module.exports = app;

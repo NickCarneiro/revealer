@@ -111,3 +111,9 @@ var revealPixel = function(x, y) {
     };
     request.send(payload);
 };
+
+
+var socket = io.connect('http://localhost:3000');
+socket.on('reveal', function (data) {
+    console.log('reveal', data);
+});
