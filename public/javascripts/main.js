@@ -24,7 +24,7 @@ partialImageCanvas.addEventListener('mousemove', function(e) {
     var x = e.pageX - pos.x;
     var y = e.pageY - pos.y;
     var rgbaString = pixelDataToRgbString(canvasContext.getImageData(x, y, 1, 1).data);
-    selectedPixelText.innerHTML = 'Click to reveal pixel ' + x + ', ' + y + ' - ' + rgbaString;
+    selectedPixelText.innerHTML = x + ', ' + y;
 
 });
 
@@ -38,7 +38,7 @@ partialImageCanvas.addEventListener('click', function(e) {
 });
 
 partialImageCanvas.addEventListener('mouseout', function(e) {
-    selectedPixelText.innerHTML = 'Mouse over the image...';
+    selectedPixelText.innerHTML = '&nbsp;';
 
 });
 

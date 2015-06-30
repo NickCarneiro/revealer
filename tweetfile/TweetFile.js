@@ -7,7 +7,6 @@ var tweetFileUtils = require('./TweetFileUtils');
 
 var TweetFile = function(tweetFilePath) {
     if (!fs.existsSync(tweetFilePath)) {
-        //console.error('Tweet file does not exist at: ', tweetFilePath);
         throw new Error('Tweet file does not exist. Set CREATE_TWEET_FILE ' +
             'environment variable to make a new one.');
         return;
@@ -268,7 +267,6 @@ TweetFile.prototype.generateStaticImage = function(secretImagePath, maskImagePat
 
                 var pixelData = secretImageCanvasContext.getImageData(x, y, 1, 1).data;
                 maskImageCanvasContext.fillStyle = this.pixelDataToRgbString(pixelData);
-                //TODO: get color for this x, y pair from the hidden image and set it
                 maskImageCanvasContext.fillRect(x, y, 1, 1);
             }
         }

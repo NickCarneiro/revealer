@@ -6,7 +6,8 @@ var test = require('tape');
 var tweetFilePath = path.resolve(__dirname, 'test_tweetfile.bin');
 
 var startTime = Date.now();
-var testUtils = require('./TestUtils');
+var tweetFileUtils = require('../tweetfile/TweetFileUtils');
+var secretImagePath = path.resolve(__dirname, '..', 'images', 'pizzakid.png');
 
 test('try to load a missing tweet file', function (t) {
     t.plan(1);
@@ -31,7 +32,7 @@ test('try to load an invalid sized tweet file', function (t) {
 
 
 test('write to beginning of file buffer, read it back from buffer', function (t) {
-    testUtils.createEmptyTweetFile(tweetFilePath);
+    tweetFileUtils.createTweetFile(tweetFilePath, secretImagePath);
     t.plan(1);
     var tweetFile = new TweetFile(tweetFilePath);
     var expectedTweet = {
@@ -48,7 +49,7 @@ test('write to beginning of file buffer, read it back from buffer', function (t)
 
 
 test('write to beginning of file buffer, read from invalid location', function (t) {
-    testUtils.createEmptyTweetFile(tweetFilePath);
+    tweetFileUtils.createTweetFile(tweetFilePath, secretImagePath);
     t.plan(2);
     var tweetFile = new TweetFile(tweetFilePath);
     var tweet = {
@@ -68,7 +69,7 @@ test('write to beginning of file buffer, read from invalid location', function (
 
 test('write to beginning of file buffer and check size of buffer', function (t) {
     t.plan(1);
-    testUtils.createEmptyTweetFile(tweetFilePath);
+    tweetFileUtils.createTweetFile(tweetFilePath, secretImagePath);
     var tweetFile = new TweetFile(tweetFilePath);
     var expectedTweet = {
         username: 'burthawk101',
@@ -88,7 +89,7 @@ test('write to beginning of file buffer and check size of buffer', function (t) 
 
 test('write to last slot in file buffer, read it back from buffer', function (t) {
     t.plan(1);
-    testUtils.createEmptyTweetFile(tweetFilePath);
+    tweetFileUtils.createTweetFile(tweetFilePath, secretImagePath);
     var tweetFile = new TweetFile(tweetFilePath);
     var expectedTweet = {
         username: 'burthawk101',
@@ -108,7 +109,7 @@ test('write to first slot in file buffer, close file, read it back from reopened
     t.plan(1);
     var x = 0;
     var y = 0;
-    testUtils.createEmptyTweetFile(tweetFilePath);
+    tweetFileUtils.createTweetFile(tweetFilePath, secretImagePath);
     var tweetFile = new TweetFile(tweetFilePath);
     var expectedTweet = {
         username: 'burthawk101',
@@ -134,7 +135,7 @@ test('write to 5 slots in file buffer, close file, read it back from reopened fi
     expectedTweets.push([{username: 'bart', content: 'Eat my shorts!', id: 543534}, {x: 101, y: 100}]);
     expectedTweets.push([{username: 'marge', content: 'I don\'t know what marge says', id: 123445}, {x: 100, y: 100}]);
     expectedTweets.push([{username: 'homer', content: 'mmmm unit tests', id: 0}, {x: 1, y: 0}]);
-    testUtils.createEmptyTweetFile(tweetFilePath);
+    tweetFileUtils.createTweetFile(tweetFilePath, secretImagePath);
     var tweetFile = new TweetFile(tweetFilePath);
     expectedTweets.forEach(function (tweet) {
         var coordinates = tweet[1];
@@ -162,7 +163,7 @@ test('attempt to save some invalid tweets', function (t) {
     t.plan(4);
     var x = 0;
     var y = 0;
-    testUtils.createEmptyTweetFile(tweetFilePath);
+    tweetFileUtils.createTweetFile(tweetFilePath, secretImagePath);
     var tweetFile = new TweetFile(tweetFilePath);
     var expectedTweet = {
         username: 'burthawk101',

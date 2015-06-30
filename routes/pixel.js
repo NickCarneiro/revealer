@@ -31,6 +31,7 @@ router.post('/', function (req, res) {
         tweetFile.saveTweet(tweetRequest.x, tweetRequest.y, tweetRequest.username,
             tweetRequest.tweetContent, tweetRequest.tweetId);
         res.json({});
+
         socket.emit('reveal', { x: tweetRequest.x, y: tweetRequest.y });
     } catch (e) {
         res.status(400).json({error: e.message});

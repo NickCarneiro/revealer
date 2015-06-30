@@ -43,8 +43,9 @@ app.use(function(req, res, next) {
 });
 
 var tweetFilePath = path.resolve(__dirname, 'tweetfile.bin');
+var hiddenImagePath = path.resolve(__dirname, 'images', 'pizzakid.png');
 if (!fs.existsSync(tweetFilePath) && process.env.CREATE_TWEET_FILE) {
-  tweetFileUtils.createTweetFile(tweetFilePath);
+  tweetFileUtils.createTweetFile(tweetFilePath, hiddenImagePath);
 } else {
   console.log('Saw existing tweetfile.');
 }
