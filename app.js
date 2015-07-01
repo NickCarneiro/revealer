@@ -15,7 +15,10 @@ var tweetFileUtils = require('./tweetfile/TweetFileUtils');
 var app = express();
 var server = app.listen(3000);
 var io = require('socket.io').listen(server);
-
+app.set('io', io);
+io.on('connection', function (socket) {
+  app.set('socket', socket);
+});
 
 
 // view engine setup
@@ -71,10 +74,5 @@ var syncPartiallyRevealedImage = function() {
 
 syncPartiallyRevealedImage();
 setInterval(syncPartiallyRevealedImage, 60000);
-
-io.on('connection', function (socket) {
-  app.set('socket', socket);
-  app.set('io', io);
-});
 
 module.exports = app;
