@@ -36,6 +36,7 @@ test('write to beginning of file buffer, read it back from buffer', function (t)
     t.plan(1);
     var tweetFile = new TweetFile(tweetFilePath);
     var expectedTweet = {
+        color: [ 106, 117, 121 ],
         username: 'burthawk101',
         content: 'hello world',
         id: 12345
@@ -92,6 +93,7 @@ test('write to last slot in file buffer, read it back from buffer', function (t)
     tweetFileUtils.createTweetFile(tweetFilePath, secretImagePath);
     var tweetFile = new TweetFile(tweetFilePath);
     var expectedTweet = {
+        color: [ 85, 83, 94 ],
         username: 'burthawk101',
         content: 'hello world',
         id: 12345
@@ -114,7 +116,8 @@ test('write to first slot in file buffer, close file, read it back from reopened
     var expectedTweet = {
         username: 'burthawk101',
         content: 'hello world',
-        id: 12345
+        id: 12345,
+        color: [ 106, 117, 121 ]
     };
     tweetFile.saveTweet(x, y, expectedTweet.username, expectedTweet.content, expectedTweet.id);
     tweetFile.close();
@@ -130,11 +133,11 @@ test('write to first slot in file buffer, close file, read it back from reopened
 test('write to 5 slots in file buffer, close file, read it back from reopened file', function (t) {
     t.plan(7);
     var expectedTweets = [];
-    expectedTweets.push([{username: 'maggie', content: 'slurp', id: 1}, {x: 639, y: 479}]);
-    expectedTweets.push([{username: 'lisa', content: 'I need braces', id: 111}, {x: 0, y: 0}]);
-    expectedTweets.push([{username: 'bart', content: 'Eat my shorts!', id: 543534}, {x: 101, y: 100}]);
-    expectedTweets.push([{username: 'marge', content: 'I don\'t know what marge says', id: 123445}, {x: 100, y: 100}]);
-    expectedTweets.push([{username: 'homer', content: 'mmmm unit tests', id: 0}, {x: 1, y: 0}]);
+    expectedTweets.push([{username: 'maggie', content: 'slurp', id: 1, color: [ 85, 83, 94 ]}, {x: 639, y: 479}]);
+    expectedTweets.push([{username: 'lisa', content: 'I need braces', id: 111, color: [ 106, 117, 121 ]}, {x: 0, y: 0}]);
+    expectedTweets.push([{username: 'bart', content: 'Eat my shorts!', id: 543534, color: [ 48, 42, 42 ]}, {x: 101, y: 100}]);
+    expectedTweets.push([{username: 'marge', content: 'I don\'t know what marge says', id: 123445, color: [ 48, 42, 42 ]}, {x: 100, y: 100}]);
+    expectedTweets.push([{username: 'homer', content: 'mmmm unit tests', id: 0, color: [ 102, 113, 117 ]}, {x: 1, y: 0}]);
     tweetFileUtils.createTweetFile(tweetFilePath, secretImagePath);
     var tweetFile = new TweetFile(tweetFilePath);
     expectedTweets.forEach(function (tweet) {

@@ -1,8 +1,9 @@
 // see readme.md for a loose file format spec
 var fs = require('fs');
+var path = require('path');
 var Canvas = require('canvas');
-var Image = Canvas.Image;
 
+var Image = Canvas.Image;
 var tweetFileUtils = require('./TweetFileUtils');
 
 var TweetFile = function(tweetFilePath) {
@@ -15,7 +16,6 @@ var TweetFile = function(tweetFilePath) {
     var fileStats = fs.statSync(tweetFilePath);
     var fileSizeInBytes = fileStats.size;
     if (fileSizeInBytes !== this.getExpectedFileBufferLength()) {
-        //console.error('Tweet file is invalid size. Refusing to open: ', tweetFilePath);
         throw new Error('Tweet file is invalid size. Refusing to open.');
         return;
     }
@@ -28,6 +28,23 @@ var TweetFile = function(tweetFilePath) {
     this.fileBuffer_ = new Buffer(tweetFileUtils.TWEET_SLOT_SIZE_BYTES *
         (tweetFileUtils.IMAGE_HEIGHT * tweetFileUtils.IMAGE_WIDTH));
     fs.readSync(this.tweetFileDescriptor_, this.fileBuffer_, 0, this.fileBuffer_.length, 0);
+
+    //load color information from hidden image into map
+    var secretImagePath = path.resolve(__dirname, '..', 'images', 'pizzakid.png');
+    var secretImageFileDescriptor = fs.readFileSync(secretImagePath);
+    var secretImage = new Image();
+    secretImage.src = secretImageFileDescriptor;
+    var secretImageCanvas = new Canvas(tweetFileUtils.IMAGE_WIDTH, tweetFileUtils.IMAGE_HEIGHT);
+    var secretImageCanvasContext = secretImageCanvas.getContext('2d');
+    secretImageCanvasContext.drawImage(secretImage, 0, 0);
+
+    for (var y = 0; y < tweetFileUtils.IMAGE_HEIGHT; y++) {
+        for (var x = 0; x < tweetFileUtils.IMAGE_WIDTH; x++) {
+            var pixelData = secretImageCanvasContext.getImageData(x, y, 1, 1).data;
+            this.addColorsToPixel_(x, y, pixelData[0], pixelData[1], pixelData[2]);
+        }
+    }
+
     this.initializeUsernameMap_();
 };
 
@@ -138,7 +155,8 @@ TweetFile.prototype.buildTweetBuffer_ = function(username, tweetContent, tweetId
     //* 560 bytes of UTF-8 text for a tweet, padded with zeroes
     //* 60 bytes of UTF-8 text for a username
     //* 8 byte unsigned integer for a tweet id
-    var buffer = new Buffer(tweetFileUtils.TWEET_SLOT_SIZE_BYTES);
+    // don't overwrite colors already in the slot
+    var buffer = new Buffer(tweetFileUtils.TWEET_SLOT_SIZE_BYTES - tweetFileUtils.COLOR_LENGTH_BYTES);
     // zero it out to overwrite random bytes in that memory location
     buffer.fill(0);
 
@@ -147,6 +165,24 @@ TweetFile.prototype.buildTweetBuffer_ = function(username, tweetContent, tweetId
     buffer.writeDoubleLE(tweetId,
         tweetFileUtils.MAX_TWEET_LENGTH_BYTES + tweetFileUtils.MAX_USERNAME_LENGTH_BYTES);
     return buffer;
+};
+
+
+/**
+ * copies color information to the end of a slot
+ * @param x
+ * @param y
+ * @param r
+ * @param g
+ * @param b
+ * @private
+ */
+TweetFile.prototype.addColorsToPixel_ = function(x, y, r, g, b) {
+    var colorBuffer = new Buffer([r, g, b]);
+    var addressInFile = this.getAddressFromCoordinates_(x, y);
+    var filePosition = this.getByteOffsetFromAddress_(addressInFile) +
+        tweetFileUtils.TWEET_SLOT_SIZE_BYTES - tweetFileUtils.COLOR_LENGTH_BYTES;
+    colorBuffer.copy(this.fileBuffer_, filePosition);
 };
 
 /**
@@ -166,7 +202,7 @@ TweetFile.prototype.unpackTweetBuffer_ = function(tweetBuffer) {
     tweet.username = tweetBuffer.toString('utf-8', tweetFileUtils.MAX_TWEET_LENGTH_BYTES,
         tweetFileUtils.MAX_TWEET_LENGTH_BYTES + tweetFileUtils.MAX_USERNAME_LENGTH_BYTES);
     tweet.id = tweetBuffer.readDoubleLE(
-        tweetFileUtils.MAX_TWEET_LENGTH_BYTES +tweetFileUtils. MAX_USERNAME_LENGTH_BYTES);
+        tweetFileUtils.MAX_TWEET_LENGTH_BYTES + tweetFileUtils.MAX_USERNAME_LENGTH_BYTES);
 
     // The problem is that tweetContent and username are padded with zeroes after the content.
     // I'm not sure how to do this in one step because utf-8 characters are a variable number of bytes.
@@ -174,6 +210,16 @@ TweetFile.prototype.unpackTweetBuffer_ = function(tweetBuffer) {
     // potential problem: Tweets containing null characters are going to get truncated
     tweet.content = this.stripTrailingNullCharacters_(tweet.content);
     tweet.username = this.stripTrailingNullCharacters_(tweet.username);
+    var redOffset = tweetFileUtils.MAX_TWEET_LENGTH_BYTES + tweetFileUtils.MAX_USERNAME_LENGTH_BYTES +
+        tweetFileUtils.MAX_TWEET_ID_LENGTH_BYTES;
+    var greenOffset = tweetFileUtils.MAX_TWEET_LENGTH_BYTES + tweetFileUtils.MAX_USERNAME_LENGTH_BYTES +
+        tweetFileUtils.MAX_TWEET_ID_LENGTH_BYTES + tweetFileUtils.COLOR_LENGTH_BYTES / 3;
+    var blueOffset = tweetFileUtils.MAX_TWEET_LENGTH_BYTES + tweetFileUtils.MAX_USERNAME_LENGTH_BYTES +
+        tweetFileUtils.MAX_TWEET_ID_LENGTH_BYTES + tweetFileUtils.COLOR_LENGTH_BYTES / 3 * 2;
+    tweet.color = [];
+    tweet.color[0] = tweetBuffer.readUInt8(redOffset);
+    tweet.color[1] = tweetBuffer.readUInt8(greenOffset);
+    tweet.color[2] = tweetBuffer.readUInt8(blueOffset);
 
     if (tweet.content === '' && tweet.id === 0 && tweet.username === '') {
         return null;

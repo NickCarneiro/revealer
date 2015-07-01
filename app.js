@@ -43,9 +43,8 @@ app.use(function(req, res, next) {
 });
 
 var tweetFilePath = path.resolve(__dirname, 'tweetfile.bin');
-var hiddenImagePath = path.resolve(__dirname, 'images', 'pizzakid.png');
 if (!fs.existsSync(tweetFilePath) && process.env.CREATE_TWEET_FILE) {
-  tweetFileUtils.createTweetFile(tweetFilePath, hiddenImagePath);
+  tweetFileUtils.createTweetFile(tweetFilePath);
 } else {
   console.log('Saw existing tweetfile.');
 }
@@ -75,6 +74,7 @@ setInterval(syncPartiallyRevealedImage, 60000);
 
 io.on('connection', function (socket) {
   app.set('socket', socket);
+  app.set('io', io);
 });
 
 module.exports = app;

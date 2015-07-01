@@ -22,6 +22,7 @@ router.get('/', function (req, res) {
 router.post('/', function (req, res) {
     var tweetFile = req.app.get('tweetFile');
     var socket = req.app.get('socket');
+    var io = req.app.get('io');
     var tweetRequest = req.body;
     var existingTweet = tweetFile.getTweet(tweetRequest.x, tweetRequest.y);
     if (existingTweet !== null) {
@@ -31,8 +32,9 @@ router.post('/', function (req, res) {
         tweetFile.saveTweet(tweetRequest.x, tweetRequest.y, tweetRequest.username,
             tweetRequest.tweetContent, tweetRequest.tweetId);
         res.json({});
-
-        socket.emit('reveal', { x: tweetRequest.x, y: tweetRequest.y });
+        var savedTweet = tweetFile.getTweet(tweetRequest.x, tweetRequest.y);
+        io.sockets.emit('reveal', { x: tweetRequest.x, y: tweetRequest.y, color: savedTweet.color});
+        socket.emit('reveal', { x: tweetRequest.x, y: tweetRequest.y, color: savedTweet.color});
     } catch (e) {
         res.status(400).json({error: e.message});
     }

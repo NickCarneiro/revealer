@@ -23,7 +23,6 @@ partialImageCanvas.addEventListener('mousemove', function(e) {
     var pos = findPos(this);
     var x = e.pageX - pos.x;
     var y = e.pageY - pos.y;
-    var rgbaString = pixelDataToRgbString(canvasContext.getImageData(x, y, 1, 1).data);
     selectedPixelText.innerHTML = x + ', ' + y;
 
 });
@@ -56,7 +55,7 @@ function findPos(obj) {
 }
 
 var pixelDataToRgbString = function(pixelData) {
-    return 'rgba(' + pixelData[0] + ', ' + pixelData[1] + ', ' + pixelData[2] + ')';
+    return 'rgb(' + pixelData[0] + ', ' + pixelData[1] + ', ' + pixelData[2] + ')';
 };
 
 
@@ -115,5 +114,9 @@ var revealPixel = function(x, y) {
 
 var socket = io.connect('http://localhost:3000');
 socket.on('reveal', function (data) {
-    console.log('reveal', data);
+    // draw newly revealed pixel to canvas
+    var rgbaString = pixelDataToRgbString(data.color);
+    console.log(rgbaString);
+    canvasContext.fillStyle = rgbaString;
+    canvasContext.fillRect(data.x, data.y, 1, 1);
 });
