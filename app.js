@@ -16,6 +16,7 @@ var app = express();
 var server = app.listen(3000);
 var io = require('socket.io').listen(server);
 app.set('io', io);
+app.set('hostname', process.env.HOSTNAME || 'localhost');
 
 
 // view engine setup

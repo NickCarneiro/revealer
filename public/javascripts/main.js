@@ -119,6 +119,6 @@ var revealPixel = function(x, y) {
 };
 
 
-var socket = io.connect('http://localhost:3000');
+var socket = io.connect('http://' + window.hostname + ':3000');
 socket.on('reveal', drawPixel);
 
