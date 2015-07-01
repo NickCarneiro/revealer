@@ -86,6 +86,14 @@ var getPixelInformation = function(x, y) {
 };
 
 
+var drawPixel = function (data) {
+    // draw newly revealed pixel to canvas
+    var rgbaString = pixelDataToRgbString(data.color);
+    canvasContext.fillStyle = rgbaString;
+    canvasContext.fillRect(data.x, data.y, 1, 1);
+};
+
+
 var revealPixel = function(x, y) {
     var tweetData = {
         x: x,
@@ -100,12 +108,11 @@ var revealPixel = function(x, y) {
     request.setRequestHeader('Content-Type', 'application/json; charset=UTF-8');
     request.onload = function() {
         if (request.status >= 200 && request.status < 400) {
-            // Success!
-            var resp = request.responseText;
+            var resp = JSON.parse(request.responseText);
             console.log(resp);
         } else {
             // We reached our target server, but it returned an error
-
+            console.log(request.response);
         }
     };
     request.send(payload);
@@ -113,10 +120,5 @@ var revealPixel = function(x, y) {
 
 
 var socket = io.connect('http://localhost:3000');
-socket.on('reveal', function (data) {
-    // draw newly revealed pixel to canvas
-    var rgbaString = pixelDataToRgbString(data.color);
-    console.log(rgbaString);
-    canvasContext.fillStyle = rgbaString;
-    canvasContext.fillRect(data.x, data.y, 1, 1);
-});
+socket.on('reveal', drawPixel);
+

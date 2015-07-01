@@ -31,10 +31,11 @@ router.post('/', function (req, res) {
     try {
         tweetFile.saveTweet(tweetRequest.x, tweetRequest.y, tweetRequest.username,
             tweetRequest.tweetContent, tweetRequest.tweetId);
-        res.json({});
         var savedTweet = tweetFile.getTweet(tweetRequest.x, tweetRequest.y);
+        // tell everyone about this pixel
         io.sockets.emit('reveal', { x: tweetRequest.x, y: tweetRequest.y, color: savedTweet.color});
-        socket.emit('reveal', { x: tweetRequest.x, y: tweetRequest.y, color: savedTweet.color});
+        // return empty response because we're already listening on websocket
+        res.json({});
     } catch (e) {
         console.log(e);
         res.status(400).json({error: e.message});
