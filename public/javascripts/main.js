@@ -21,18 +21,30 @@ partialImage.onload = function() {
 
 partialImageCanvas.addEventListener('mousemove', function(e) {
     var pos = findPos(this);
-    var x = e.pageX - pos.x;
-    var y = e.pageY - pos.y;
-    selectedPixelText.innerHTML = x + ', ' + y;
+    var rawX = e.pageX - pos.x;
+    var rawY = e.pageY - pos.y;
+
+    var displayWidth = document.getElementById('hidden-image-canvas').offsetWidth;
+    var imageX = Math.floor(rawX / displayWidth * IMAGE_WIDTH);
+
+    var displayHeight = document.getElementById('hidden-image-canvas').offsetHeight;
+    var imageY = Math.floor(rawY / displayHeight * IMAGE_HEIGHT);
+    selectedPixelText.innerHTML = imageX + ', ' + imageY;
 
 });
 
 partialImageCanvas.addEventListener('click', function(e) {
     var pos = findPos(this);
-    var x = e.pageX - pos.x;
-    var y = e.pageY - pos.y;
-    getPixelInformation(x, y);
-    console.log('clicked ', x, y)
+    var rawX = e.pageX - pos.x;
+    var rawY = e.pageY - pos.y;
+
+    var displayWidth = document.getElementById('hidden-image-canvas').offsetWidth;
+    var canvasX = Math.floor(rawX / displayWidth * IMAGE_WIDTH);
+
+    var displayHeight = document.getElementById('hidden-image-canvas').offsetHeight;
+    var canvasY = Math.floor(rawY / displayHeight * IMAGE_HEIGHT);
+    getPixelInformation(canvasX, canvasY);
+    console.log('clicked ', canvasX, canvasY);
 
 });
 

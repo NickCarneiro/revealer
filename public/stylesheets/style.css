@@ -1,1 +1,1 @@
-body{padding:50px;font:14px "Lucida Grande",Helvetica,Arial,sans-serif;background:url('/images/trees.gif');background-size:100%;text-align:center}a{color:#00b7ff}h1{color:#fff}.image-container{width:640px;height:480px;border:1px solid #fff;margin:0 auto}#hidden-image-canvas{display:none}
+body{font:14px "Lucida Grande",Helvetica,Arial,sans-serif;background-size:100%;text-align:center;padding:0;margin:0;background:#000}a{color:#00b7ff}h1{color:#fff}.image-container{width:100%;border-top:1px solid #fff}#hidden-image-canvas{display:none;width:100%}#hidden-image{width:100%}
