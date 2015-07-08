@@ -2,8 +2,8 @@ var fs = require('fs');
 var Canvas = require('canvas');
 var Image = Canvas.Image;
 
-var IMAGE_WIDTH = 640;
-var IMAGE_HEIGHT = 480;
+var IMAGE_WIDTH = 400;
+var IMAGE_HEIGHT = 400;
 var MAX_TWEET_LENGTH_BYTES = 560;
 var MAX_USERNAME_LENGTH_BYTES = 60;
 var MAX_TWEET_ID_LENGTH_BYTES = 8;

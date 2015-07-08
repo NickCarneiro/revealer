@@ -1,5 +1,5 @@
-var IMAGE_WIDTH = 640;
-var IMAGE_HEIGHT = 480;
+var IMAGE_WIDTH = 400;
+var IMAGE_HEIGHT = 400;
 var IMAGE_SRC = '/images/output.png';
 var partialImageCanvas = document.getElementById('hidden-image-canvas');
 
