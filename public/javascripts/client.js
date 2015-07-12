@@ -80,11 +80,22 @@ var revealPixel = function(x, y) {
 };
 
 var initializePage = function() {
+    //scale image to fill page.
     var partialImageCanvas = document.getElementById('hidden-image-canvas');
+    var hiddenImageElement = document.getElementById('hidden-image');
+    var width;
+    if (window.innerWidth > window.innerHeight) {
+        // fit the image on a desktop screen
+        width = window.innerHeight;
+    } else {
+        // fit on a portrait screen
+        width = window.innerWidth;
+    }
+    partialImageCanvas.style.width = width + 'px';
+    hiddenImageElement.style.width = width + 'px';
 
 
     var selectedPixelText = document.getElementById('selected-pixel');
-    var hiddenImageElement = document.getElementById('hidden-image');
 // copy the partially revealed image to a canvas and hide the actual image so
 // we can draw new pixels as they come through
     var partialImage = new Image(IMAGE_WIDTH, IMAGE_HEIGHT);
@@ -131,6 +142,7 @@ var initializePage = function() {
         selectedPixelText.innerHTML = '&nbsp;';
 
     });
+
 
     var socket = io.connect('http://' + window.hostname + ':3000');
     socket.on('reveal', drawPixel.bind(this, canvasContext));
